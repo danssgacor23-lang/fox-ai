@@ -6,8 +6,9 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 
+// API Key langsung disematkan di sini sesuai permintaan apple sauce
 const openai = new OpenAI({
-  apiKey: process.env.APMIX_API_KEY,
+  apiKey: "apx_live_T9aneOdPLeMDL4lGIGde2i7L3rRzPxJ9k6ZneLIv",
   baseURL: "https://api.apmix.ai/v1"
 });
 
