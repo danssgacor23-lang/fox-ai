@@ -6,7 +6,6 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 
-// API Key langsung disematkan di sini sesuai permintaan apple sauce
 const openai = new OpenAI({
   apiKey: "apx_live_T9aneOdPLeMDL4lGIGde2i7L3rRzPxJ9k6ZneLIv",
   baseURL: "https://api.apmix.ai/v1"
@@ -30,6 +29,7 @@ Formatting Rules:
 app.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
+    
     const formattedMessages = [
       { role: "system", content: SYSTEM_PROMPT },
       ...messages
@@ -38,6 +38,7 @@ app.post('/api/chat', async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: "claude-sonnet-4-6-free",
       messages: formattedMessages,
+      max_tokens: 4000,
     });
 
     res.json({ success: true, data: completion.choices[0].message });
