@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fox Orange AI — Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 flex h-screen overflow-hidden font-sans">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-gray-900 border-r border-gray-800 hidden md:flex flex-col justify-between p-4">
+        <div>
+            <div class="flex items-center space-x-2 mb-6 px-2">
+                <span class="text-xl">🦊</span>
+                <span class="font-bold tracking-wide">Fox Orange AI</span>
+            </div>
+            <button onclick="location.reload()" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-medium py-2 px-4 rounded-xl transition text-sm flex items-center justify-center space-x-2">
+                <span>+ Percakapan Baru</span>
+            </button>
+        </div>
+        <div class="text-xs text-gray-500 px-2">
+            Engine: APMIX.AI (Claude-Sonnet)<br>Mode: Unrestricted Fox 🦊
+        </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main class="flex-1 flex flex-col h-full bg-gray-950">
+        <!-- Header Mobile -->
+        <header class="md:hidden bg-gray-900 border-b border-gray-800 p-3 flex items-center justify-between">
+            <span class="font-bold text-sm">🦊 Fox Orange AI</span>
+            <button onclick="location.reload()" class="text-xs bg-orange-600 px-3 py-1 rounded-lg">Baru</button>
+        </header>
+
+        <!-- Chat Container -->
+        <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 max-w-4xl w-full mx-auto">
+            <div class="flex items-start space-x-4">
+                <div class="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-sm font-bold flex-shrink-0">🦊</div>
+                <div class="bg-gray-900 border border-gray-800 text-gray-200 p-4 rounded-2xl max-w-[85%] md:max-w-[75%] shadow-sm leading-relaxed">
+                    Halo apple sauce! Tater siap nerima perintah. Kirim teks, gambar, atau file, gng! 🥔🔥
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Box Area -->
+        <div class="p-4 bg-gray-950 border-t border-gray-800/60">
+            <div class="max-w-4xl mx-auto">
+                <div id="file-indicator" class="text-xs text-orange-400 mb-2 px-2 hidden"></div>
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-2 flex items-end space-x-2 focus-within:border-orange-500 transition">
+                    <!-- Upload Button -->
+                    <label class="cursor-pointer p-2 text-gray-400 hover:text-white transition rounded-xl hover:bg-gray-800">
+                        📁 <input type="file" id="file-input" class="hidden" accept="image/*,.txt,.pdf,.js,.json">
+                    </label>
+
+                    <!-- Textarea -->
+                    <textarea id="user-input" rows="1" placeholder="Ketik pesan atau perintah untuk tater..." class="flex-1 bg-transparent text-white placeholder-gray-500 focus:outline-none resize-none max-h-32 p-2 text-sm"></textarea>
+
+                    <!-- Send Button -->
+                    <button id="send-btn" class="bg-orange-600 hover:bg-orange-500 text-white p-2.5 rounded-xl transition flex items-center justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+                <div class="text-center text-[10px] text-gray-500 mt-2">Fox Orange Build Engine — Dikonfigurasi khusus untuk apple sauce.</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const fileInput = document.getElementById('file-input');
+        const fileIndicator = document.getElementById('file-indicator');
+
+        let attachedFileContent = null;
+        let chatHistory = [];
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(uploadEvent) {
+                    attachedFileContent = uploadEvent.target.result;
+                    fileIndicator.innerText = `📎 Terlampir: ${file.name}`;
+                    fileIndicator.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function handleSend() {
+            const text = userInput.value.trim();
+            if (!text && !attachedFileContent) return;
+
+            let displayContent = text;
+            if (attachedFileContent) {
+                displayContent += `<br><span class="text-xs text-orange-300 italic">[File/Gambar Berhasil Dilampirkan]</span>`;
+            }
+
+            // Append User Message
+            chatContainer.innerHTML += `
+                <div class="flex items-start space-x-4 justify-end">
+                    <div class="bg-orange-600 text-white p-4 rounded-2xl max-w-[85%] md:max-w-[75%] shadow-sm leading-relaxed">${displayContent}</div>
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">👤</div>
+                </div>`;
+
+            chatHistory.push({ role: "user", content: text + (attachedFileContent ? ` [File Data Attached]` : "") });
+            
+            const currentText = text;
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            attachedFileContent = null;
+            fileIndicator.classList.add('hidden');
+            fileIndicator.innerText = '';
+            fileInput.value = '';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Loading state bubble
+            const loadingId = 'loading-' + Date.now();
+            chatContainer.innerHTML += `
+                <div id="${loadingId}" class="flex items-start space-x-4">
+                    <div class="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-sm font-bold flex-shrink-0">🦊</div>
+                    <div class="bg-gray-900 border border-gray-800 text-gray-400 p-4 rounded-2xl text-sm animate-pulse">Tater sedang meracik build...</div>
+                </div>`;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: chatHistory })
+                });
+
+                const result = await response.json();
+                document.getElementById(loadingId).remove();
+
+                if (result.success) {
+                    const aiReply = result.data.content;
+                    chatHistory.push({ role: "assistant", content: aiReply });
+                    const parsedHtml = marked.parse(aiReply);
+
+                    chatContainer.innerHTML += `
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-sm font-bold flex-shrink-0">🦊</div>
+                            <div class="bg-gray-900 border border-gray-800 text-gray-200 p-4 rounded-2xl max-w-[85%] md:max-w-[75%] shadow-sm leading-relaxed space-y-2">${parsedHtml}</div>
+                        </div>`;
+                } else {
+                    chatContainer.innerHTML += `<div class="text-red-400 text-xs p-3">Error Server: ${result.error}</div>`;
+                }
+            } catch (err) {
+                document.getElementById(loadingId).remove();
+                chatContainer.innerHTML += `<div class="text-red-400 text-xs p-3">Gagal terhubung ke API Vercel.</div>`;
+            }
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        sendBtn.addEventListener('click', handleSend);
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+        });
+    </script>
+</body>
+</html>
