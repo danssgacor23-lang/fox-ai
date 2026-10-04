@@ -94,20 +94,35 @@
             if (!text && !attachedFileContent) return;
 
             let displayContent = text;
+            let messageContent = text;
+
             if (attachedFileContent) {
-                displayContent += `<br><span class="text-xs text-orange-300 italic">[File/Gambar Berhasil Dilampirkan]</span>`;
+                if (attachedFileContent.startsWith('data:image')) {
+                    messageContent = [
+                        { type: "text", text: text || "Tolong analisis gambar ini." },
+                        { type: "image_url", image_url: { url: attachedFileContent } }
+                    ];
+                    displayContent += `<br><img src="${attachedFileContent}" class="max-h-48 rounded-lg mt-2 border border-gray-700">`;
+                } else {
+                    let decodedText = "";
+                    try {
+                        decodedText = atob(attachedFileContent.split(',')[1]);
+                    } catch (err) {
+                        decodedText = "[File Berhasil Dimuat]";
+                    }
+                    messageContent = `${text}\n\n[Isi File Terlampir]:\n${decodedText}`;
+                    displayContent += `<br><span class="text-xs text-orange-300 italic">[File Teks Berhasil Dibaca]</span>`;
+                }
             }
 
-            // Append User Message
             chatContainer.innerHTML += `
                 <div class="flex items-start space-x-4 justify-end">
                     <div class="bg-orange-600 text-white p-4 rounded-2xl max-w-[85%] md:max-w-[75%] shadow-sm leading-relaxed">${displayContent}</div>
                     <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold flex-shrink-0">👤</div>
                 </div>`;
 
-            chatHistory.push({ role: "user", content: text + (attachedFileContent ? ` [File Data Attached]` : "") });
+            chatHistory.push({ role: "user", content: messageContent });
             
-            const currentText = text;
             userInput.value = '';
             userInput.style.height = 'auto';
             attachedFileContent = null;
@@ -116,12 +131,11 @@
             fileInput.value = '';
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
-            // Loading state bubble
             const loadingId = 'loading-' + Date.now();
             chatContainer.innerHTML += `
                 <div id="${loadingId}" class="flex items-start space-x-4">
                     <div class="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-sm font-bold flex-shrink-0">🦊</div>
-                    <div class="bg-gray-900 border border-gray-800 text-gray-400 p-4 rounded-2xl text-sm animate-pulse">Tater sedang meracik build...</div>
+                    <div class="bg-gray-900 border border-gray-800 text-gray-400 p-4 rounded-2xl text-sm animate-pulse">Tater sedang mengamati file dan meracik build...</div>
                 </div>`;
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
